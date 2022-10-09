@@ -5,3 +5,5 @@ source: https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud?resource=downloa
 Credit Card Fraud Detection Using Machine Learning
 
 tool: R markdown
+
+model: logistics regression
