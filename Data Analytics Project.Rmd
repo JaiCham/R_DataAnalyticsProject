@@ -1,0 +1,78 @@
+---
+title: "Data Analytics Project"
+author: "Jai Chi Cham"
+date: "2022-10-08"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# discuss the business problem/goal
+As a merchant/bank, we want to build a model to detech credit card fradulent activity. Credit card fraud is one forms of identify theft that made fraudulent payment by using a credit card in an unauthorized manner.
+
+# identify where the dataset was retrieved from 
+The dataset contains transactions made by credit cards in September 2013 by European cardholders.
+https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud?resource=download
+
+# identify the code that imported and saved your dataset in R
+Downloaded Csv file from the Kaggle.com -> search for working directory folder of R Studio -> moved the file to the active working directory folder
+
+```{r, echo = TRUE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(ranger)
+library(caret)
+getwd()
+data <- read_csv('creditcard.csv')
+```
+# describe your data set 
+```{r results = TRUE}
+nrow(data)
+ncol(data)
+names(data)
+colnames(data)
+summary(data$Amount)
+```
+# discuss any data preparation, missing values and errors
+Due to confidentiality issues, there is no original features nor more background information about the data. Features V1, V2, … V28 are the principal components obtained with PCA, the only features which have not been transformed with PCA are 'Time' and 'Amount'. Feature 'Time' contains the seconds elapsed between each transaction and the first transaction in the dataset. 
+```{r results = TRUE}
+# find missing value using is.na function
+missing_data <- c(sum(is.na(data$Time)), sum(is.na(data$V1)),sum(is.na(data$V2)),sum(is.na(data$V3)),sum(is.na(data$V4)),sum(is.na(data$V5)),sum(is.na(data$V6)),sum(is.na(data$V7)),sum(is.na(data$V8)),sum(is.na(data$V9)),sum(is.na(data$V10)),sum(is.na(data$V11)),sum(is.na(data$V12)),sum(is.na(data$V13)),sum(is.na(data$V14)),sum(is.na(data$V15)),sum(is.na(data$V16)),sum(is.na(data$V17)),sum(is.na(data$V18)),sum(is.na(data$V19)),sum(is.na(data$V20)),sum(is.na(data$V21)),sum(is.na(data$V22)),sum(is.na(data$V23)),sum(is.na(data$V24)),sum(is.na(data$V25)),sum(is.na(data$V26)),sum(is.na(data$V27)),sum(is.na(data$V28)),sum(is.na(data$Amount)),sum(is.na(data$Class)))
+table.df <- data.frame (missing_data)
+print(table.df)
+```
+There is no missing value in the data,  most likely the data has been cleaned to remove the missing value. 
+
+# Data Modeling and Evaluation
+We will first use caTools function to split the data into training and test sets.
+Then , we use set.seed function to make sure that we get the same result for randomization. Next, we will use sample.split and subset function to create a sample set. We set 80% of the data as training set and 20% as testing set. Finally, we use the dim function to check the dimensions of the sample dataset.
+
+```{r results = TRUE}
+library(caTools)
+set.seed(123)
+
+data_sample = sample.split(data$Class,SplitRatio=0.80)
+trainset_data <- subset(data,data_sample==TRUE)
+testset_data <- subset(data,data_sample==FALSE)
+dim(trainset_data)
+dim(testset_data)
+
+## Logistic Regression Model
+#we use class as the dependent variable,  and all others as independent variable
+# we expect the result to be binomial response variable: fraud or not fraud
+Logistic_Model=glm(Class~.,testset_data,family=binomial())
+summary(Logistic_Model)
+plot(Logistic_Model)
+```
+
+# produce and discuss the output
+we will use ROC curve to evaluate the performance of the model.
+```{r results = TRUE}
+library(pROC)
+data_predict <- predict(Logistic_Model,testset_data, probability = TRUE)
+auc.gbm = roc(testset_data$Class, data_predict, plot = TRUE, col = "red")
+```
+Per result,the curve is located at the top left, this mean that logistic model is a good predictive model to classify credit card transactions as fraudulent or not.
